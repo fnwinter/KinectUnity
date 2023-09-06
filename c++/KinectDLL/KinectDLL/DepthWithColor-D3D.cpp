@@ -19,6 +19,14 @@ extern "C" __declspec(dllexport) void exit_loop(bool _exit)
     canExit = _exit;
 }
 
+#define MAX_MSG_LENGTH 200
+void showErrorBox(LPCWSTR text)
+{
+    WCHAR buffer[MAX_MSG_LENGTH];
+    wsprintf(buffer, text);
+    MessageBox(NULL, buffer, L"INFO", MB_ICONHAND | MB_OK);
+}
+
 /// <summary>
 /// Entry point for the application
 /// </summary>
@@ -45,6 +53,8 @@ extern "C" __declspec(dllexport) int kinect_main()
 
     g_Application.m_hWnd = hwnd;
     g_Application.m_hInst = hInstance;
+
+    showErrorBox(L"START");
 
     if ( FAILED( g_Application.InitDevice() ) )
     {
@@ -73,6 +83,8 @@ extern "C" __declspec(dllexport) int kinect_main()
             g_Application.Render();
         }
     }
+
+    showErrorBox(L"STOP");
 
     return (int)msg.wParam;
 }
