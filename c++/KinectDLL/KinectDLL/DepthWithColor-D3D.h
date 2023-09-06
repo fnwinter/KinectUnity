@@ -80,12 +80,12 @@ public:
     /// <returns>result of message processing</returns>
     LRESULT HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+    HINSTANCE                           m_hInst;
+    HWND                                m_hWnd;
 private:
     // 3d camera
     CCamera                             m_camera;
 
-    HINSTANCE                           m_hInst;
-    HWND                                m_hWnd;
     D3D_FEATURE_LEVEL                   m_featureLevel;
     ID3D11Device*                       m_pd3dDevice;
     ID3D11DeviceContext*                m_pImmediateContext;

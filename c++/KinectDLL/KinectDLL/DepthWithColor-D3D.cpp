@@ -21,8 +21,10 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 /// <param name="lpCmdLine">command line arguments</param>
 /// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
 /// <returns>status</returns>
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+//int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+extern "C" __declspec(dllexport) int kinect_main()
 {
+    /*
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -30,6 +32,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     {
         return 0;
     }
+    */
+
+    HWND hwnd = GetActiveWindow();
+    HINSTANCE hInstance = (HINSTANCE)GetWindowLongW(hwnd, GWLP_HINSTANCE);
+
+    g_Application.m_hWnd = hwnd;
+    g_Application.m_hInst = hInstance;
 
     if ( FAILED( g_Application.InitDevice() ) )
     {
