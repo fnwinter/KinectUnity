@@ -13,6 +13,12 @@ CDepthWithColorD3D g_Application;  // Application class
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+bool canExit = false;
+extern "C" __declspec(dllexport) void exit_loop(bool _exit)
+{
+    canExit = _exit;
+}
+
 /// <summary>
 /// Entry point for the application
 /// </summary>
@@ -55,6 +61,8 @@ extern "C" __declspec(dllexport) int kinect_main()
     MSG msg = {0};
     while (WM_QUIT != msg.message)
     {
+        if (canExit) break;
+
         if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
