@@ -395,7 +395,7 @@ HRESULT CDepthWithColorD3D::LoadShaders()
 {
     // Compile the geometry shader
     ID3D10Blob* pBlob = NULL;
-    HRESULT hr = CompileShaderFromFile(L"DepthWithColor-D3D.fx", "GS", "gs_4_0", &pBlob);
+    HRESULT hr = CompileShaderFromFile("GS", "gs_4_0", &pBlob);
     if ( FAILED(hr) ) { return hr; };
 
     // Create the geometry shader
@@ -404,7 +404,7 @@ HRESULT CDepthWithColorD3D::LoadShaders()
     if ( FAILED(hr) ) { return hr; }
 
     // Compile the pixel shader
-    hr = CompileShaderFromFile(L"DepthWithColor-D3D.fx", "PS", "ps_4_0", &pBlob);
+    hr = CompileShaderFromFile("PS", "ps_4_0", &pBlob);
     if ( FAILED(hr) ) { return hr; }
 
     // Create the pixel shader
@@ -413,7 +413,7 @@ HRESULT CDepthWithColorD3D::LoadShaders()
     if ( FAILED(hr) ) { return hr; }
 
     // Compile the vertex shader
-    hr = CompileShaderFromFile(L"DepthWithColor-D3D.fx", "VS", "vs_4_0", &pBlob);
+    hr = CompileShaderFromFile("VS", "vs_4_0", &pBlob);
     if ( FAILED(hr) ) { return hr; }
 
     // Create the vertex shader

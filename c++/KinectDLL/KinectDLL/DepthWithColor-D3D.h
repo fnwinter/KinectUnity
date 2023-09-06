@@ -16,7 +16,7 @@
 
 #include "Camera.h"
 #include "DX11Utils.h"
-#include "resource.h"
+#include "resource2.h"
 
 /// <summary>
 /// Constant buffer for shader
