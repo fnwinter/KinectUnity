@@ -14,10 +14,10 @@ CDepthWithColorD3D g_Application;  // Application class
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-bool canExit = false;
-extern "C" __declspec(dllexport) void exit_loop(bool _exit)
+bool isReady = false;
+extern "C" __declspec(dllexport) void kinect_render()
 {
-    canExit = _exit;
+    if (isReady) g_Application.Render();
 }
 
 /// <summary>
@@ -47,8 +47,6 @@ extern "C" __declspec(dllexport) int kinect_main()
     g_Application.m_hWnd = hwnd;
     g_Application.m_hInst = hInstance;
 
-    showErrorBox(L"START");
-
     if ( FAILED( g_Application.InitDevice() ) )
     {
         return 0;
@@ -62,10 +60,9 @@ extern "C" __declspec(dllexport) int kinect_main()
 
     // Main message loop
     MSG msg = {0};
+    /*
     while (WM_QUIT != msg.message)
     {
-        if (canExit) break;
-
         if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -76,8 +73,8 @@ extern "C" __declspec(dllexport) int kinect_main()
             g_Application.Render();
         }
     }
-
-    showErrorBox(L"STOP");
+    */
+    isReady = true;
 
     return (int)msg.wParam;
 }
@@ -722,7 +719,10 @@ HRESULT CDepthWithColorD3D::ProcessDepth()
     hr = m_pImmediateContext->Map(m_pDepthTexture2D, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &msT);
     if ( FAILED(hr) ) { return hr; }
 
-    memcpy(msT.pData, m_depthD16, LockedRect.size);    
+    memcpy(msT.pData, m_depthD16, LockedRect.size);
+
+    // keep depth buffer and send it to unity
+
     m_pImmediateContext->Unmap(m_pDepthTexture2D, NULL);
 
     return hr;
