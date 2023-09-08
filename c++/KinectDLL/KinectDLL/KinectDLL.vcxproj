@@ -150,12 +150,14 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource2.h" />
+    <ClInclude Include="KinectDLLHelp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DepthWithColor-D3D.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="DX11Utils.cpp" />
+    <ClCompile Include="KinectDLLHelp.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

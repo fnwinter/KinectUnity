@@ -7,6 +7,7 @@
 //------------------------------------------------------------------------------
 
 #include "DepthWithColor-D3D.h"
+#include "KinectDLLHelp.h"
 
 // Global Variables
 CDepthWithColorD3D g_Application;  // Application class
@@ -17,14 +18,6 @@ bool canExit = false;
 extern "C" __declspec(dllexport) void exit_loop(bool _exit)
 {
     canExit = _exit;
-}
-
-#define MAX_MSG_LENGTH 200
-void showErrorBox(LPCWSTR text)
-{
-    WCHAR buffer[MAX_MSG_LENGTH];
-    wsprintf(buffer, text);
-    MessageBox(NULL, buffer, L"INFO", MB_ICONHAND | MB_OK);
 }
 
 /// <summary>

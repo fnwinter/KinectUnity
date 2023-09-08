@@ -12,6 +12,9 @@
 #include "resource2.h"
 #include <winuser.h>
 
+#include "KinectDLLHelp.h"
+extern HMODULE DllHandle;
+
 /// <summary>
 /// Helper for compiling shaders with D3DX11
 /// </summary>
@@ -26,10 +29,16 @@ HRESULT CompileShaderFromFile(LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3D10B
 
     ID3D10Blob* pErrorBlob = NULL;
 
-    HMODULE hModule = GetModuleHandleW(NULL);
+    HRSRC hResource = ::FindResource(DllHandle, MAKEINTRESOURCE(IDR_SHADER1), L"SHADER");
+    HGLOBAL hResourceData = ::LoadResource(DllHandle, hResource);
+    LPVOID pData = ::LockResource(hResourceData);
+    unsigned long resourceSize = ::SizeofResource(DllHandle, hResource);
 
-    hr = D3DX11CompileFromResource(
-        hModule, MAKEINTRESOURCE(IDR_SHADER1), NULL,
+    char* bytes = new char[resourceSize];
+    memcpy(bytes, pData, resourceSize * sizeof(char));
+
+    hr = D3DX11CompileFromMemory(
+        (LPCSTR)bytes, resourceSize, NULL,
         NULL, NULL, szEntryPoint, szShaderModel,
         0, 0, NULL, ppBlobOut, &pErrorBlob, NULL );
 
