@@ -87,7 +87,7 @@ public:
     int GetColorWidth() { return m_colorWidth; }
     int GetColorHeight() { return m_colorHeight; }
 
-    int GetDepthBufferSize() { return m_depthWidth * m_depthHeight; }
+    int GetDepthBufferSize() { return m_depthWidth * m_depthHeight * sizeof(USHORT); }
     int GetDepthWidth() { return m_depthWidth; }
     int GetDepthHeight() { return m_depthHeight; }
 

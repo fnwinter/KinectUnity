@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.IO;
+
 using UnityEngine;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -46,6 +48,11 @@ public class KinectUnity : MonoBehaviour
 
     Texture2D tex;
 
+    [SerializeField]
+    public GameObject quad;
+
+    Renderer m_Renderer;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -63,6 +70,12 @@ public class KinectUnity : MonoBehaviour
         kinect_render();
 
         updateDepthBuffer();
+
+        if (quad != null)
+        {
+            m_Renderer = quad.GetComponent<Renderer>();
+            m_Renderer.material.SetTexture("_MainTex", tex);
+        }
     }
 
     void updateColorBuffer()
@@ -74,14 +87,19 @@ public class KinectUnity : MonoBehaviour
         if (depth_buffer_size == 0)
         {
             depth_buffer_size = kinect_depth_buffer_size();
+            Debug.LogFormat("depth buffer size {0}", depth_buffer_size);
         }
         if (depth_buffer_size == 0) return;
 
-        if (depthBufferPtr == null)
+        unsafe
         {
-            depthBufferPtr = Marshal.AllocHGlobal(depth_buffer_size);
+            if (depthBufferPtr.ToPointer() == null)
+            {
+                depthBufferPtr = Marshal.AllocHGlobal(depth_buffer_size);
+                Debug.LogFormat("depthBufferPtr created");
+            }
+            if (depthBufferPtr.ToPointer() == null) return;
         }
-        if (depthBufferPtr == null) return;
 
         kinect_get_depth_buffer(depthBufferPtr, depth_buffer_size);
 
@@ -90,17 +108,37 @@ public class KinectUnity : MonoBehaviour
 
         Marshal.Copy(depthBufferPtr, depthBufferBytes, 0, depth_buffer_size);
 
+        ByteArrayToFile("depth.img", depthBufferBytes);
+
         if (tex == null)
         {
             int depth_width = kinect_get_depth_width();
             int depth_height = kinect_get_depth_height();
-            tex = new Texture2D(depth_width, depth_height, TextureFormat.PVRTC_RGBA4, false);
+            Debug.LogFormat("kinect_get_depth width / height {0} / {1}", depth_width, depth_height);
+            tex = new Texture2D(depth_width, depth_height, TextureFormat.Alpha8, false);
         }
 
         if (tex != null)
         {
             tex.LoadRawTextureData(depthBufferBytes);
             tex.Apply();
+        }
+    }
+
+    public bool ByteArrayToFile(string fileName, byte[] byteArray)
+    {
+        try
+        {
+            using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))
+            {
+                fs.Write(byteArray, 0, byteArray.Length);
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception caught in process: {0}", ex);
+            return false;
         }
     }
 }
