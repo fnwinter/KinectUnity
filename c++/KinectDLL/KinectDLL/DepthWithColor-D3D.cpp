@@ -1,4 +1,5 @@
 ﻿#include "pch.h"
+#include <assert.h>
 
 //------------------------------------------------------------------------------
 // <copyright file="DepthWithColor-D3D.cpp" company="Microsoft">
@@ -14,10 +15,62 @@ CDepthWithColorD3D g_Application;  // Application class
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+// Unity functions
+#define UNITY_EXPORT extern "C" __declspec(dllexport) 
 bool isReady = false;
-extern "C" __declspec(dllexport) void kinect_render()
+UNITY_EXPORT void kinect_render()
 {
     if (isReady) g_Application.Render();
+}
+
+UNITY_EXPORT int kinect_color_buffer_size()
+{
+    if (isReady) return g_Application.GetColorBufferSize();
+    return 0;
+}
+
+UNITY_EXPORT int kinect_depth_buffer_size()
+{
+    if (isReady) return g_Application.GetDepthBufferSize();
+    return 0;
+}
+
+UNITY_EXPORT bool kinect_get_color_buffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (isReady) return g_Application.CopyColorBuffer(dst_buf, buf_size);
+    return false;
+}
+
+UNITY_EXPORT bool kinect_get_depth_buffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (isReady) return g_Application.CopyDepthBuffer(dst_buf, buf_size);
+    return false;
+}
+
+UNITY_EXPORT int kinect_get_color_width()
+{
+    if (isReady) return g_Application.GetColorWidth();
+    return 0;
+}
+
+UNITY_EXPORT int kinect_get_color_height()
+{
+    if (isReady) return g_Application.GetColorHeight();
+    return 0;
+}
+
+UNITY_EXPORT int kinect_get_depth_width()
+{
+    if (isReady) return g_Application.GetDepthWidth();
+    return 0;
+}
+
+UNITY_EXPORT int kinect_get_depth_height()
+{
+    if (isReady) return g_Application.GetDepthHeight();
+    return 0;
 }
 
 /// <summary>
@@ -29,7 +82,7 @@ extern "C" __declspec(dllexport) void kinect_render()
 /// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
 /// <returns>status</returns>
 //int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
-extern "C" __declspec(dllexport) int kinect_main()
+UNITY_EXPORT int kinect_main()
 {
     /*
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -721,8 +774,6 @@ HRESULT CDepthWithColorD3D::ProcessDepth()
 
     memcpy(msT.pData, m_depthD16, LockedRect.size);
 
-    // keep depth buffer and send it to unity
-
     m_pImmediateContext->Unmap(m_pDepthTexture2D, NULL);
 
     return hr;
@@ -890,4 +941,26 @@ HRESULT CDepthWithColorD3D::Render()
 
     // Present our back buffer to our front buffer
     return m_pSwapChain->Present(0, 0);
+}
+
+bool CDepthWithColorD3D::CopyDepthBuffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (buf_size == GetDepthBufferSize())
+    {
+        memcpy(dst_buf, m_depthD16, buf_size);
+        return true;
+    }
+    return false;
+}
+
+bool CDepthWithColorD3D::CopyColorBuffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (buf_size == GetColorBufferSize())
+    {
+        memcpy(dst_buf, m_colorRGBX, buf_size);
+        return true;
+    }
+    return false;
 }

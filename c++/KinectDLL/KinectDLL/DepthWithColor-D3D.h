@@ -82,6 +82,18 @@ public:
 
     HINSTANCE                           m_hInst;
     HWND                                m_hWnd;
+
+    int GetColorBufferSize() { return m_colorWidth * m_colorHeight * cBytesPerPixel; }
+    int GetColorWidth() { return m_colorWidth; }
+    int GetColorHeight() { return m_colorHeight; }
+
+    int GetDepthBufferSize() { return m_depthWidth * m_depthHeight; }
+    int GetDepthWidth() { return m_depthWidth; }
+    int GetDepthHeight() { return m_depthHeight; }
+
+    bool CopyColorBuffer(int* dst_buf, int buf_size);
+    bool CopyDepthBuffer(int* dst_buf, int buf_size);
+
 private:
     // 3d camera
     CCamera                             m_camera;
