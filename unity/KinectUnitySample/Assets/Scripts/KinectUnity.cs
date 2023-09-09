@@ -51,8 +51,6 @@ public class KinectUnity : MonoBehaviour
     [SerializeField]
     public GameObject quad;
 
-    Renderer m_Renderer;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -71,11 +69,6 @@ public class KinectUnity : MonoBehaviour
 
         updateDepthBuffer();
 
-        if (quad != null)
-        {
-            m_Renderer = quad.GetComponent<Renderer>();
-            m_Renderer.material.SetTexture("_MainTex", tex);
-        }
     }
 
     void updateColorBuffer()
@@ -89,7 +82,6 @@ public class KinectUnity : MonoBehaviour
             depth_buffer_size = kinect_depth_buffer_size();
             Debug.LogFormat("depth buffer size {0}", depth_buffer_size);
         }
-        if (depth_buffer_size == 0) return;
 
         unsafe
         {
@@ -98,30 +90,35 @@ public class KinectUnity : MonoBehaviour
                 depthBufferPtr = Marshal.AllocHGlobal(depth_buffer_size);
                 Debug.LogFormat("depthBufferPtr created");
             }
-            if (depthBufferPtr.ToPointer() == null) return;
         }
+
+        if (depthBufferBytes == null) depthBufferBytes = new byte[depth_buffer_size];
 
         kinect_get_depth_buffer(depthBufferPtr, depth_buffer_size);
 
-        if (depthBufferBytes == null) depthBufferBytes = new byte[depth_buffer_size];
-        if (depthBufferBytes == null) return;
-
         Marshal.Copy(depthBufferPtr, depthBufferBytes, 0, depth_buffer_size);
 
-        ByteArrayToFile("depth.img", depthBufferBytes);
+        // For Test
+        // ByteArrayToFile("depth.img", depthBufferBytes);
 
         if (tex == null)
         {
             int depth_width = kinect_get_depth_width();
             int depth_height = kinect_get_depth_height();
             Debug.LogFormat("kinect_get_depth width / height {0} / {1}", depth_width, depth_height);
-            tex = new Texture2D(depth_width, depth_height, TextureFormat.Alpha8, false);
+            tex = new Texture2D(depth_width, depth_height, TextureFormat.R16, false);
         }
 
         if (tex != null)
         {
             tex.LoadRawTextureData(depthBufferBytes);
             tex.Apply();
+        }
+
+        if (quad != null)
+        {
+            Renderer m_Renderer = quad.GetComponent<Renderer>();
+            m_Renderer.material.mainTexture = tex;
         }
     }
 
