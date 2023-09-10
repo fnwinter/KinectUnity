@@ -17,7 +17,9 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 // Unity functions
 #define UNITY_EXPORT extern "C" __declspec(dllexport) 
+
 bool isReady = false;
+
 UNITY_EXPORT void kinect_render()
 {
     if (isReady) g_Application.Render();
@@ -73,6 +75,28 @@ UNITY_EXPORT int kinect_get_depth_height()
     return 0;
 }
 
+bool CDepthWithColorD3D::CopyDepthBuffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (buf_size == GetDepthBufferSize())
+    {
+        memcpy(dst_buf, m_depthD16, buf_size);
+        return true;
+    }
+    return false;
+}
+
+bool CDepthWithColorD3D::CopyColorBuffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (buf_size == GetColorBufferSize())
+    {
+        memcpy(dst_buf, m_colorRGBX, buf_size);
+        return true;
+    }
+    return false;
+}
+
 /// <summary>
 /// Entry point for the application
 /// </summary>
@@ -111,9 +135,13 @@ UNITY_EXPORT int kinect_main()
         return 0;
     }
 
+    isReady = true;
+
+    return 0;
+
     // Main message loop
-    MSG msg = {0};
     /*
+    MSG msg = {0};
     while (WM_QUIT != msg.message)
     {
         if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
@@ -126,10 +154,9 @@ UNITY_EXPORT int kinect_main()
             g_Application.Render();
         }
     }
-    */
-    isReady = true;
-
+ 
     return (int)msg.wParam;
+    */
 }
 
 /// <summary>
@@ -941,26 +968,4 @@ HRESULT CDepthWithColorD3D::Render()
 
     // Present our back buffer to our front buffer
     return m_pSwapChain->Present(0, 0);
-}
-
-bool CDepthWithColorD3D::CopyDepthBuffer(int* dst_buf, int buf_size)
-{
-    assert(dst_buf);
-    if (buf_size == GetDepthBufferSize())
-    {
-        memcpy(dst_buf, m_depthD16, buf_size);
-        return true;
-    }
-    return false;
-}
-
-bool CDepthWithColorD3D::CopyColorBuffer(int* dst_buf, int buf_size)
-{
-    assert(dst_buf);
-    if (buf_size == GetColorBufferSize())
-    {
-        memcpy(dst_buf, m_colorRGBX, buf_size);
-        return true;
-    }
-    return false;
 }
