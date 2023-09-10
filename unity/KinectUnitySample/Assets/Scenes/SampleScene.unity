@@ -776,7 +776,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   updateDepth: 1
   updateColor: 1
-  updateIR: 1
+  updateIR: 0
   colorQuad: {fileID: 837285511}
   IRQuad: {fileID: 998272019}
   depthQuad: {fileID: 1969407253}
