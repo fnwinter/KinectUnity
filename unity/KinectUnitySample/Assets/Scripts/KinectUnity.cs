@@ -30,6 +30,11 @@ public class KinectUnity : MonoBehaviour
     [DllImport("KinectDLL.dll", CallingConvention = CallingConvention.Cdecl)]
     extern static int kinect_get_color_height();
 
+    // IR API
+    // IR uses same width/height API temporary
+    [DllImport("KinectDLL.dll", CallingConvention = CallingConvention.Cdecl)]
+    extern static bool kinect_get_ir_buffer(IntPtr refBuffer, int bufferSize);
+
     // Depth API
     [DllImport("KinectDLL.dll", CallingConvention = CallingConvention.Cdecl)]
     extern static bool kinect_get_depth_buffer(IntPtr refBuffer, int bufferSize);
@@ -47,6 +52,8 @@ public class KinectUnity : MonoBehaviour
     public bool updateDepth = true;
     [SerializeField]
     public bool updateColor = true;
+    [SerializeField]
+    public bool updateIR = true;
 
     // Color Variables
     [SerializeField]
@@ -56,6 +63,15 @@ public class KinectUnity : MonoBehaviour
     private byte[] colorBufferBytes;
     private int color_buffer_size = 0;
     private Texture2D colorTexture;
+
+    // IR Variables
+    [SerializeField]
+    public GameObject IRQuad;
+
+    private IntPtr IRBufferPtr;
+    private byte[] IRBufferBytes;
+    private int ir_buffer_size = 0;
+    private Texture2D IRTexture;
 
     // Depth Variables
     [SerializeField]
@@ -88,6 +104,8 @@ public class KinectUnity : MonoBehaviour
         if (updateDepth) updateDepthBuffer();
 
         if (updateColor) updateColorBuffer();
+
+        if (updateIR) updateIRBuffer();
     }
 
     void updateColorBuffer()
@@ -190,6 +208,50 @@ public class KinectUnity : MonoBehaviour
         {
             Renderer colorDepthQuadRenderer = colorDepthQuad.GetComponent<Renderer>();
             colorDepthQuadRenderer.material.SetTexture("_ParallaxMap", depthTexture);
+        }
+    }
+
+    void updateIRBuffer()
+    {
+        if (ir_buffer_size == 0)
+        {
+            ir_buffer_size = kinect_color_buffer_size();
+            Debug.LogFormat("ir buffer size {0}", ir_buffer_size);
+        }
+
+        unsafe
+        {
+            if (IRBufferPtr.ToPointer() == null)
+            {
+                IRBufferPtr = Marshal.AllocHGlobal(color_buffer_size);
+                Debug.LogFormat("IRBufferPtr created");
+            }
+        }
+
+        if (IRBufferBytes == null) IRBufferBytes = new byte[color_buffer_size];
+
+        kinect_get_ir_buffer(IRBufferPtr, color_buffer_size);
+
+        Marshal.Copy(IRBufferPtr, IRBufferBytes, 0, color_buffer_size);
+
+        if (IRTexture == null)
+        {
+            int color_width = kinect_get_color_width();
+            int color_height = kinect_get_color_height();
+            Debug.LogFormat("kinect_get_color width / height {0} / {1}", color_width, color_height);
+            IRTexture = new Texture2D(color_width, color_height, TextureFormat.BGRA32, false);
+        }
+
+        if (IRTexture != null)
+        {
+            IRTexture.LoadRawTextureData(IRBufferBytes);
+            IRTexture.Apply();
+        }
+
+        if (IRQuad != null)
+        {
+            Renderer IRQuadRenderer = IRQuad.GetComponent<Renderer>();
+            IRQuadRenderer.material.mainTexture = IRTexture;
         }
     }
 

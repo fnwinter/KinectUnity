@@ -51,6 +51,13 @@ UNITY_EXPORT bool kinect_get_depth_buffer(int* dst_buf, int buf_size)
     return false;
 }
 
+UNITY_EXPORT bool kinect_get_ir_buffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (isReady) return g_Application.CopyIRBuffer(dst_buf, buf_size);
+    return false;
+}
+
 UNITY_EXPORT int kinect_get_color_width()
 {
     if (isReady) return g_Application.GetColorWidth();
@@ -92,6 +99,17 @@ bool CDepthWithColorD3D::CopyColorBuffer(int* dst_buf, int buf_size)
     if (buf_size == GetColorBufferSize())
     {
         memcpy(dst_buf, m_colorRGBX, buf_size);
+        return true;
+    }
+    return false;
+}
+
+bool CDepthWithColorD3D::CopyIRBuffer(int* dst_buf, int buf_size)
+{
+    assert(dst_buf);
+    if (buf_size == GetColorBufferSize())
+    {
+        memcpy(dst_buf, m_IRRGBX, buf_size);
         return true;
     }
     return false;
@@ -247,10 +265,14 @@ CDepthWithColorD3D::CDepthWithColorD3D()
     m_pDepthStreamHandle = INVALID_HANDLE_VALUE;
     m_hNextColorFrameEvent = INVALID_HANDLE_VALUE;
     m_pColorStreamHandle = INVALID_HANDLE_VALUE;
+    m_hNextIRColorFrameEvent = INVALID_HANDLE_VALUE;
+    m_pIRColorStreamHandle = INVALID_HANDLE_VALUE;
 
     m_depthD16 = new USHORT[m_depthWidth*m_depthHeight];
     m_colorCoordinates = new LONG[m_depthWidth*m_depthHeight*2];
-    m_colorRGBX = new BYTE[m_colorWidth*m_colorHeight*cBytesPerPixel];
+    m_colorRGBX = new BYTE[m_colorWidth * m_colorHeight * cBytesPerPixel];
+    // FIXME: use different color w/h
+    m_IRRGBX = new BYTE[m_colorWidth * m_colorHeight * cBytesPerPixel];
 
     m_bNearMode = false;
 
@@ -293,9 +315,11 @@ CDepthWithColorD3D::~CDepthWithColorD3D()
 
     CloseHandle(m_hNextDepthFrameEvent);
     CloseHandle(m_hNextColorFrameEvent);
+    CloseHandle(m_hNextIRColorFrameEvent);
 
     // done with pixel data
     delete[] m_colorRGBX;
+    delete[] m_IRRGBX;
     delete[] m_colorCoordinates;
     delete[] m_depthD16;
 }
@@ -457,6 +481,18 @@ HRESULT CDepthWithColorD3D::CreateFirstConnected()
         m_hNextColorFrameEvent,
         &m_pColorStreamHandle );
     if (FAILED(hr) ) { return hr; }
+
+    m_hNextIRColorFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    // Open a IR image stream to receive color frames
+    hr = m_pNuiSensor->NuiImageStreamOpen(
+        NUI_IMAGE_TYPE_COLOR_INFRARED,
+        cIRResolution,
+        0,
+        2,
+        m_hNextIRColorFrameEvent,
+        &m_pIRColorStreamHandle);
+    if (FAILED(hr)) { return hr; }
 
     // Start with near mode on
     ToggleNearMode();
@@ -832,6 +868,28 @@ HRESULT CDepthWithColorD3D::ProcessColor()
     return hr;
 }
 
+HRESULT CDepthWithColorD3D::ProcessIR()
+{
+    NUI_IMAGE_FRAME imageFrame;
+
+    HRESULT hr = m_pNuiSensor->NuiImageStreamGetNextFrame(m_pIRColorStreamHandle, 0, &imageFrame);
+    if (FAILED(hr)) { return hr; }
+
+    NUI_LOCKED_RECT LockedRect;
+    hr = imageFrame.pFrameTexture->LockRect(0, &LockedRect, NULL, 0);
+    if (FAILED(hr)) { return hr; }
+
+    memcpy(m_IRRGBX, LockedRect.pBits, LockedRect.size);
+    m_bIRReceived = true;
+
+    hr = imageFrame.pFrameTexture->UnlockRect(0);
+    if (FAILED(hr)) { return hr; };
+
+    hr = m_pNuiSensor->NuiImageStreamReleaseFrame(m_pIRColorStreamHandle, &imageFrame);
+
+    return hr;
+}
+
 /// <summary>
 /// Process color data received from Kinect
 /// </summary>
@@ -921,6 +979,14 @@ HRESULT CDepthWithColorD3D::Render()
         if ( SUCCEEDED(ProcessColor()) )
         {
             needToMapColorToDepth = true;
+        }
+    }
+
+    //if (WAIT_OBJECT_0 == WaitForSingleObject(m_hNextIRColorFrameEvent, 0))
+    {
+        //if ( SUCCEEDED(ProcessIR()) )
+        {
+
         }
     }
 

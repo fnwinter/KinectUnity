@@ -34,6 +34,7 @@ class CDepthWithColorD3D
 
     static const NUI_IMAGE_RESOLUTION   cDepthResolution = NUI_IMAGE_RESOLUTION_640x480;
     static const NUI_IMAGE_RESOLUTION   cColorResolution = NUI_IMAGE_RESOLUTION_640x480;
+    static const NUI_IMAGE_RESOLUTION   cIRResolution = NUI_IMAGE_RESOLUTION_640x480;
 
 public:
     /// <summary>
@@ -93,6 +94,7 @@ public:
 
     bool CopyColorBuffer(int* dst_buf, int buf_size);
     bool CopyDepthBuffer(int* dst_buf, int buf_size);
+    bool CopyIRBuffer(int* dst_buf, int buf_size);
 
 private:
     // 3d camera
@@ -134,7 +136,9 @@ private:
     HANDLE                              m_pDepthStreamHandle;
     HANDLE                              m_hNextColorFrameEvent;
     HANDLE                              m_pColorStreamHandle;
-    
+    HANDLE                              m_hNextIRColorFrameEvent;
+    HANDLE                              m_pIRColorStreamHandle;
+
     // for passing depth data as a texture
     ID3D11Texture2D*                    m_pDepthTexture2D;
     ID3D11ShaderResourceView*           m_pDepthTextureRV;
@@ -147,11 +151,13 @@ private:
     // for mapping depth to color
     USHORT*                             m_depthD16;
     BYTE*                               m_colorRGBX;
+    BYTE*                               m_IRRGBX;
     LONG*                               m_colorCoordinates;
 
     // to prevent drawing until we have data for both streams
     bool                                m_bDepthReceived;
     bool                                m_bColorReceived;
+    bool                                m_bIRReceived;
 
     bool                                m_bNearMode;
 
@@ -176,6 +182,12 @@ private:
     /// </summary>
     /// <returns>S_OK for success, or failure code</returns>
     HRESULT                             ProcessColor();
+
+    /// <summary>
+    /// Process IR data received from Kinect
+    /// </summary>
+    /// <returns>S_OK for success, or failure code</returns>
+    HRESULT                             ProcessIR();
 
     /// <summary>
     /// Adjust color to the same space as depth
