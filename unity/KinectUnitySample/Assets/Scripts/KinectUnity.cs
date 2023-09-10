@@ -66,6 +66,9 @@ public class KinectUnity : MonoBehaviour
     private int depth_buffer_size = 0;
     private Texture2D depthTexture;
 
+    [SerializeField]
+    private GameObject colorDepthQuad;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -115,7 +118,7 @@ public class KinectUnity : MonoBehaviour
             int color_width = kinect_get_color_width();
             int color_height = kinect_get_color_height();
             Debug.LogFormat("kinect_get_color width / height {0} / {1}", color_width, color_height);
-            colorTexture = new Texture2D(color_width, color_height, TextureFormat.RGBA32, false);
+            colorTexture = new Texture2D(color_width, color_height, TextureFormat.BGRA32, false);
         }
 
         if (colorTexture != null)
@@ -128,6 +131,12 @@ public class KinectUnity : MonoBehaviour
         {
             Renderer colorQuadRenderer = colorQuad.GetComponent<Renderer>();
             colorQuadRenderer.material.mainTexture = colorTexture;
+        }
+
+        if (colorDepthQuad != null)
+        {
+            Renderer colorDepthQuadRenderer = colorDepthQuad.GetComponent<Renderer>();
+            colorDepthQuadRenderer.material.mainTexture = colorTexture;
         }
     }
 
@@ -175,6 +184,12 @@ public class KinectUnity : MonoBehaviour
         {
             Renderer depthQuadRenderer = depthQuad.GetComponent<Renderer>();
             depthQuadRenderer.material.mainTexture = depthTexture;
+        }
+
+        if (colorDepthQuad != null)
+        {
+            Renderer colorDepthQuadRenderer = colorDepthQuad.GetComponent<Renderer>();
+            colorDepthQuadRenderer.material.SetTexture("_ParallaxMap", depthTexture);
         }
     }
 
