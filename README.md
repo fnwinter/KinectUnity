@@ -11,4 +11,4 @@
  - We can pass color, depth, IR data from Kinect to Unity.
  - Currently this project provides Windows/DLL ONLY for Kinect V1.
  - ![Color](./resource/Kinect1.PNG)
- - ![IR](./resource/Kinect1.PNG)
+ - ![IR](./resource/Kinect2.PNG)
