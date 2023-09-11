@@ -89,7 +89,12 @@ public class KinectUnity : MonoBehaviour
     void Start()
     {
         // IR and Color are exclusive
-        if (updateIR) updateColor = false;
+        if (updateColor && updateIR) Debug.Log("IR and color are exclusive.");
+        if (updateIR)
+        {
+            updateColor = false;
+            Debug.Log("IR is enabled");
+        }
         kinect_main(updateIR);
     }
 
