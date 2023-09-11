@@ -124,7 +124,7 @@ bool CDepthWithColorD3D::CopyIRBuffer(int* dst_buf, int buf_size)
 /// <param name="nCmdShow">whether to display minimized, maximized, or normally</param>
 /// <returns>status</returns>
 //int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
-UNITY_EXPORT int kinect_main()
+UNITY_EXPORT int kinect_main(bool irCamera = false)
 {
     /*
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -147,7 +147,7 @@ UNITY_EXPORT int kinect_main()
         return 0;
     }
 
-    if ( FAILED( g_Application.CreateFirstConnected() ) )
+    if ( FAILED( g_Application.CreateFirstConnected(irCamera) ) )
     {
         MessageBox(NULL, L"No ready Kinect found!", L"Error", MB_ICONHAND | MB_OK);
         return 0;
@@ -416,7 +416,7 @@ LRESULT CDepthWithColorD3D::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, 
 /// Create the first connected Kinect found 
 /// </summary>
 /// <returns>indicates success or failure</returns>
-HRESULT CDepthWithColorD3D::CreateFirstConnected()
+HRESULT CDepthWithColorD3D::CreateFirstConnected(bool enableIR)
 {
     INuiSensor * pNuiSensor = NULL;
     HRESULT hr;
@@ -469,30 +469,37 @@ HRESULT CDepthWithColorD3D::CreateFirstConnected()
         &m_pDepthStreamHandle);
     if (FAILED(hr) ) { return hr; }
 
-    // Create an event that will be signaled when color data is available
-    m_hNextColorFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    m_enableIR = enableIR;
+    if (!m_enableIR)
+    {
+        // Create an event that will be signaled when color data is available
+        m_hNextColorFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-    // Open a color image stream to receive color frames
-    hr = m_pNuiSensor->NuiImageStreamOpen(
-        NUI_IMAGE_TYPE_COLOR,
-        cColorResolution,
-        0,
-        2,
-        m_hNextColorFrameEvent,
-        &m_pColorStreamHandle );
-    if (FAILED(hr) ) { return hr; }
+        // Open a color image stream to receive color frames
+        hr = m_pNuiSensor->NuiImageStreamOpen(
+            NUI_IMAGE_TYPE_COLOR,
+            cColorResolution,
+            0,
+            2,
+            m_hNextColorFrameEvent,
+            &m_pColorStreamHandle);
+        if (FAILED(hr)) { return hr; }
+    }
 
-    m_hNextIRColorFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (m_enableIR)
+    {
+        m_hNextIRColorFrameEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-    // Open a IR image stream to receive color frames
-    hr = m_pNuiSensor->NuiImageStreamOpen(
-        NUI_IMAGE_TYPE_COLOR_INFRARED,
-        cIRResolution,
-        0,
-        2,
-        m_hNextIRColorFrameEvent,
-        &m_pIRColorStreamHandle);
-    if (FAILED(hr)) { return hr; }
+        // Open a IR image stream to receive color frames
+        hr = m_pNuiSensor->NuiImageStreamOpen(
+            NUI_IMAGE_TYPE_COLOR_INFRARED,
+            cIRResolution,
+            0,
+            2,
+            m_hNextIRColorFrameEvent,
+            &m_pIRColorStreamHandle);
+        if (FAILED(hr)) { return hr; }
+    }
 
     // Start with near mode on
     ToggleNearMode();
@@ -964,29 +971,32 @@ HRESULT CDepthWithColorD3D::Render()
 
     bool needToMapColorToDepth = false;
 
-    if ( WAIT_OBJECT_0 == WaitForSingleObject(m_hNextDepthFrameEvent, 0) )
+    if (WAIT_OBJECT_0 == WaitForSingleObject(m_hNextDepthFrameEvent, 0))
     {
         // if we have received any valid new depth data we may need to draw
-        if ( SUCCEEDED(ProcessDepth()) )
+        if (SUCCEEDED(ProcessDepth()))
         {
             needToMapColorToDepth = true;
         }
     }
 
-    if ( WAIT_OBJECT_0 == WaitForSingleObject(m_hNextColorFrameEvent, 0) )
+    if (!m_enableIR)
     {
-        // if we have received any valid new color data we may need to draw
-        if ( SUCCEEDED(ProcessColor()) )
+        if (WAIT_OBJECT_0 == WaitForSingleObject(m_hNextColorFrameEvent, 0))
         {
-            needToMapColorToDepth = true;
+            // if we have received any valid new color data we may need to draw
+            if (SUCCEEDED(ProcessColor()))
+            {
+                needToMapColorToDepth = true;
+            }
         }
     }
 
-    //if (WAIT_OBJECT_0 == WaitForSingleObject(m_hNextIRColorFrameEvent, 0))
+    if (m_enableIR)
     {
-        //if ( SUCCEEDED(ProcessIR()) )
+        if (WAIT_OBJECT_0 == WaitForSingleObject(m_hNextIRColorFrameEvent, 0))
         {
-
+            SUCCEEDED(ProcessIR());
         }
     }
 

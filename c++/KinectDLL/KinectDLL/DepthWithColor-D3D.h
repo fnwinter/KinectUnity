@@ -60,10 +60,11 @@ public:
     HRESULT                             InitDevice();
 
     /// <summary>
-    /// Create the first connected Kinect found 
+    /// Create the first connected Kinect found
     /// </summary>
+    /// <param name="irCamera">IR Camera enable, exclusive with ColorCamera</param>
     /// <returns>S_OK on success, otherwise failure code</returns>
-    HRESULT                             CreateFirstConnected();
+    HRESULT                             CreateFirstConnected(bool enableIR);
   
     /// <summary>
     /// Renders a frame
@@ -84,6 +85,7 @@ public:
     HINSTANCE                           m_hInst;
     HWND                                m_hWnd;
 
+    bool                                m_enableIR;
     int GetColorBufferSize() { return m_colorWidth * m_colorHeight * cBytesPerPixel; }
     int GetColorWidth() { return m_colorWidth; }
     int GetColorHeight() { return m_colorHeight; }

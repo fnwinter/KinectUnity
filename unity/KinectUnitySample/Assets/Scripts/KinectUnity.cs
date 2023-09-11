@@ -12,7 +12,7 @@ public class KinectUnity : MonoBehaviour
 {
     // Kinect
     [DllImport("KinectDLL.dll", CallingConvention = CallingConvention.Cdecl)]
-    extern static int kinect_main();
+    extern static int kinect_main(bool enableIR);
 
     [DllImport("KinectDLL.dll", CallingConvention = CallingConvention.Cdecl)]
     extern static void kinect_render();
@@ -88,12 +88,16 @@ public class KinectUnity : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        kinect_main();
+        // IR and Color are exclusive
+        if (updateIR) updateColor = false;
+        kinect_main(updateIR);
     }
 
     void OnDestroy()
     {
         if (depthBufferPtr != null) Marshal.FreeHGlobal(depthBufferPtr);
+        if (colorBufferPtr != null) Marshal.FreeHGlobal(colorBufferPtr);
+        if (IRBufferPtr != null) Marshal.FreeHGlobal(IRBufferPtr);
     }
 
     // Update is called once per frame
@@ -223,23 +227,23 @@ public class KinectUnity : MonoBehaviour
         {
             if (IRBufferPtr.ToPointer() == null)
             {
-                IRBufferPtr = Marshal.AllocHGlobal(color_buffer_size);
+                IRBufferPtr = Marshal.AllocHGlobal(ir_buffer_size);
                 Debug.LogFormat("IRBufferPtr created");
             }
         }
 
-        if (IRBufferBytes == null) IRBufferBytes = new byte[color_buffer_size];
+        if (IRBufferBytes == null) IRBufferBytes = new byte[ir_buffer_size];
 
-        kinect_get_ir_buffer(IRBufferPtr, color_buffer_size);
+        kinect_get_ir_buffer(IRBufferPtr, ir_buffer_size);
 
-        Marshal.Copy(IRBufferPtr, IRBufferBytes, 0, color_buffer_size);
+        Marshal.Copy(IRBufferPtr, IRBufferBytes, 0, ir_buffer_size);
 
         if (IRTexture == null)
         {
             int color_width = kinect_get_color_width();
             int color_height = kinect_get_color_height();
-            Debug.LogFormat("kinect_get_color width / height {0} / {1}", color_width, color_height);
-            IRTexture = new Texture2D(color_width, color_height, TextureFormat.BGRA32, false);
+            Debug.LogFormat("kinect_get_ir width / height {0} / {1}", color_width, color_height);
+            IRTexture = new Texture2D(color_width, color_height, TextureFormat.R16, false);
         }
 
         if (IRTexture != null)
