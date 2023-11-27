@@ -48,6 +48,9 @@ public class KinectUnity : MonoBehaviour
     [DllImport("KinectDLL.dll", CallingConvention = CallingConvention.Cdecl)]
     extern static int kinect_get_depth_height();
 
+    private int colorWidth = 0;
+    private int colorHeight = 0;
+
     [SerializeField]
     public bool updateDepth = true;
     [SerializeField]
@@ -85,6 +88,10 @@ public class KinectUnity : MonoBehaviour
     [SerializeField]
     private GameObject colorDepthQuad;
 
+    [SerializeField]
+    private GameObject kinectVFX;
+    private int vfxCount = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -115,6 +122,12 @@ public class KinectUnity : MonoBehaviour
         if (updateColor) updateColorBuffer();
 
         if (updateIR) updateIRBuffer();
+
+        if (kinectVFX != null && colorTexture != null && depthTexture != null)
+        {
+            kinectVFX.GetComponent<KinectVFX>().m_Texture = colorTexture;
+            kinectVFX.GetComponent<KinectVFX>().m_Depth = depthTexture;
+        }
     }
 
     void updateColorBuffer()
@@ -142,10 +155,10 @@ public class KinectUnity : MonoBehaviour
 
         if (colorTexture == null)
         {
-            int color_width = kinect_get_color_width();
-            int color_height = kinect_get_color_height();
-            Debug.LogFormat("kinect_get_color width / height {0} / {1}", color_width, color_height);
-            colorTexture = new Texture2D(color_width, color_height, TextureFormat.BGRA32, false);
+            colorWidth = kinect_get_color_width();
+            colorHeight = kinect_get_color_height();
+            Debug.LogFormat("kinect_get_color width / height {0} / {1}", colorWidth, colorHeight);
+            colorTexture = new Texture2D(colorWidth, colorHeight, TextureFormat.BGRA32, false);
         }
 
         if (colorTexture != null)
